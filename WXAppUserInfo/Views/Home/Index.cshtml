@@ -1,0 +1,106 @@
+﻿@model Senparc.Weixin.MP.AdvancedAPIs.OAuth.OAuthUserInfo
+@{
+    Layout = "../_Layout.cshtml";
+}
+
+<div>
+    @Model.nickname@Model.openid
+    <br />
+    @Model.country@Model.city
+    <br />
+    @Model.sex
+    <br />
+    <img class="photo" src="@Model.headimgurl" width="150"  />
+
+</div>
+
+<div>
+    <a href="javascript:;" class="open-photo weui-btn weui-btn_warn">选择一张照片</a>
+    <a href="javascript:;" class="choose-adress weui-btn weui-btn_warn">选择地址</a>
+    <a href="javascript:;" class="shop-WZ weui-btn weui-btn_warn">显示当前位置</a>
+</div>
+@section WxScript
+{
+    <script>
+        //微信js验证成功后所有带on的接口都需要注册
+        wx.ready(function () {
+            wx.onMenuShareTimeline({
+                title: '测试分享[@Model.nickname]', // 分享标题
+                link: 'http://wx.lylweb.top@(Url.Action("Share"))', // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+                imgUrl: 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3684402917,727774278&fm=27&gp=0.jpg', // 分享图标
+                success: function () {
+                   alert("分享成功")
+                },
+                cancel: function () {
+                    alert("分享失败")
+                }
+            });
+        });
+        $(function () {
+            var localIds;
+            //选择相片
+            $(".open-photo").click(function () {
+                wx.chooseImage({
+                    count: 9, // 默认9
+                    sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+                    sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+                    success: function (res) {
+                        localIds = res.localIds; // 返回选定照片的本地ID列表，localId可以作为img标签的src属性显示图片
+                        if (localIds.length == 0) {
+                            alert("没有选择照片");
+                            return;
+                        }
+                        $(".photo").attr("src", localIds[0]);
+                    }
+                });
+            });
+            $(".photo").click(function () {
+                wx.previewImage({
+                    current: 'localIds[0]', // 当前显示图片的http链接
+                    urls: localIds // 需要预览的图片http链接列表
+                });
+            })
+            $(".choose-adress").click(function () {
+                wx.openAddress({
+                    success: function (res) {
+                        var userName = res.userName; // 收货人姓名
+                        var postalCode = res.postalCode; // 邮编
+                        var provinceName = res.provinceName; // 国标收货地址第一级地址（省）
+                        var cityName = res.cityName; // 国标收货地址第二级地址（市）
+                        var countryName = res.countryName; // 国标收货地址第三级地址（国家）
+                        var detailInfo = res.detailInfo; // 详细收货地址信息
+                        var nationalCode = res.nationalCode; // 收货地址国家码
+                        var telNumber = res.telNumber; // 收货人手机号码
+
+
+                        $.alert({
+                            title: '@(Model.nickname)地址',
+                            text: 'countryName+provinceName+cityName+""+userName+telNumber',
+
+                        });
+                    }
+                });
+            })
+            $(".shop-WZ").click(function () {
+                wx.getLocation({
+                    type: 'gcj02', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+                    success: function (res) {
+                        //var latitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+                       // var longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
+                       // var speed = res.speed; // 速度，以米/每秒计
+                       // var accuracy = res.accuracy; // 位置精度
+
+                        wx.openLocation({
+                            latitude: res.latitude, // 纬度，浮点数，范围为90 ~ -90
+                            longitude: res.longitude, // 经度，浮点数，范围为180 ~ -180。
+                            name: '火星', // 位置名
+                            address: '火星情报局', // 地址详情说明
+                            scale: 20, // 地图缩放级别,整形值,范围从1~28。默认为最大
+                            infoUrl: 'http://wx.lylweb.top' // 在查看位置界面底部显示的超链接,可点击跳转
+                        });
+                    }
+                });
+            })
+        });
+    </script>
+ }
